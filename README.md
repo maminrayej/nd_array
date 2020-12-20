@@ -1,2 +1,4 @@
 # ndarray-rs
-Crate for linear algebra 
+Crate for linear algebra.
+
+Currently under development.
