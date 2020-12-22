@@ -6,7 +6,7 @@ pub struct Array<T, const D: usize> {
 }
 
 impl<T, const D: usize> Array<T, D> {
-    fn init(vec: Vec<T>, dim: [usize; D]) -> Self {
+    pub fn init(vec: Vec<T>, dim: [usize; D]) -> Self {
         let elem_count = dim.iter().fold(1, |acc, v| acc * v);
 
         if elem_count != vec.len() {
@@ -20,7 +20,7 @@ impl<T, const D: usize> Array<T, D> {
         Array { vec, dim }
     }
 
-    fn reshape<const S: usize>(self, dim: [usize; S]) -> Array<T, S> {
+    pub fn reshape<const S: usize>(self, dim: [usize; S]) -> Array<T, S> {
         Array::init(self.vec, dim)
     }
 }
