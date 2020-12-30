@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::{borrow::Cow, ops::Index};
 
 #[derive(Debug, Clone, Copy)]
 struct IdxMap {
@@ -14,32 +14,16 @@ impl IdxMap {
     fn map(&self, idx: usize) -> usize {
         (self.m * (idx as isize) + self.b) as usize
     }
-
-    fn set_b(&mut self, b: isize) {
-        self.b = b
-    }
-
-    fn set_m(&mut self, m: isize) {
-        self.m = m
-    }
-
-    fn m(&self) -> isize {
-        self.m
-    }
-
-    fn b(&self) -> isize {
-        self.b
-    }
 }
 
-pub struct Array<T, const D: usize> {
-    vec: Vec<T>,
+pub struct Array<'a, T: Clone, const D: usize> {
+    vec: Cow<'a, [T]>,
     shape: [usize; D],
     strides: [usize; D],
-    idx_map: [IdxMap; D],
+    idx_maps: [IdxMap; D],
 }
 
-impl<T, const D: usize> Array<T, D> {
+impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
     pub fn init(vec: Vec<T>, shape: [usize; D]) -> Self {
         let elem_count = shape.iter().fold(1, |acc, v| acc * v);
 
@@ -57,19 +41,36 @@ impl<T, const D: usize> Array<T, D> {
         }
 
         Array {
-            vec,
+            vec: Cow::from(vec),
             shape,
             strides,
-            idx_map: [IdxMap::init(); D],
+            idx_maps: [IdxMap::init(); D],
         }
     }
 
-    pub fn transpose(mut self) -> Array<T, D> {
+    pub fn transpose(mut self) -> Array<'a, T, D> {
         self.shape.reverse();
         self.strides.reverse();
-        self.idx_map.reverse();
+        self.idx_maps.reverse();
 
         self
+    }
+
+    pub fn t(&'a self) -> Array<'a, T, D> {
+        let mut shape = self.shape.clone();
+        let mut strides = self.strides.clone();
+        let mut idx_maps = self.idx_maps.clone();
+
+        shape.reverse();
+        strides.reverse();
+        idx_maps.reverse();
+
+        Array {
+            vec: Cow::from(&*self.vec),
+            shape,
+            strides,
+            idx_maps
+        }
     }
 
     pub fn get(&self, indices: [usize; D]) -> Option<&T> {
@@ -85,7 +86,7 @@ impl<T, const D: usize> Array<T, D> {
             .iter()
             .enumerate()
             .fold(0, |acc, (axis, axis_index)| {
-                acc + self.idx_map[axis].map(*axis_index) * self.strides[axis]
+                acc + self.idx_maps[axis].map(*axis_index) * self.strides[axis]
             });
 
         self.vec.get(index)
@@ -95,14 +96,16 @@ impl<T, const D: usize> Array<T, D> {
         Iter::init(self)
     }
 
-    pub fn flip(mut self, axis: usize) -> Array<T, D> {
-        if !(0..D).contains(&axis) {
+    pub fn flip(&'a self, axis: usize) -> Array<'a, T, D> {
+        if axis >= D {
             panic!("Axis out of bounds")
         }
 
-        let idx_map = &mut self.idx_map[axis];
+        let mut idx_maps = self.idx_maps.clone();
 
-        if idx_map.m() == -1 {
+        let idx_map = &mut idx_maps[axis];
+
+        if idx_map.m == -1 {
             idx_map.m = 1;
             idx_map.b = idx_map.b - (self.shape[axis] - 1) as isize
         } else {
@@ -110,12 +113,36 @@ impl<T, const D: usize> Array<T, D> {
             idx_map.b = idx_map.b + (self.shape[axis] - 1) as isize
         }
 
-        self
+        Array {
+            vec: Cow::from(&*self.vec),
+            shape: self.shape.clone(),
+            strides: self.strides.clone(),
+            idx_maps
+        }
     }
-}
 
-impl<T: Clone, const D: usize> Array<T, D> {
-    pub fn reshape<const S: usize>(self, shape: [usize; S]) -> Array<T, S> {
+    pub fn swap_axes(&'a self, axis0: usize, axis1: usize) -> Array<'a, T, D> {
+        if axis0 >= D || axis1 >= D {
+            panic!("Axis out of bounds")
+        }
+
+        let mut shape = self.shape.clone();
+        let mut strides = self.strides.clone();
+        let mut idx_maps = self.idx_maps.clone();
+
+        shape.swap(axis0, axis1);
+        strides.swap(axis0, axis1);
+        idx_maps.swap(axis0, axis1);
+
+        Array {
+            vec: Cow::from(&*self.vec),
+            shape,
+            strides,
+            idx_maps
+        }
+    }
+
+    pub fn reshape<const S: usize>(&self, shape: [usize; S]) -> Array<'a, T, S> {
         // TODO: Check if c-contigous
 
         let vec = self.iter().cloned().collect();
@@ -124,7 +151,7 @@ impl<T: Clone, const D: usize> Array<T, D> {
     }
 }
 
-impl<T, const D: usize> Index<[usize; D]> for Array<T, D> {
+impl<'a, T: Clone, const D: usize> Index<[usize; D]> for Array<'a, T, D> {
     type Output = T;
 
     fn index(&self, indices: [usize; D]) -> &Self::Output {
@@ -140,20 +167,20 @@ impl<T, const D: usize> Index<[usize; D]> for Array<T, D> {
             .iter()
             .enumerate()
             .fold(0, |acc, (axis, axis_index)| {
-                acc + self.idx_map[axis].map(*axis_index) * self.strides[axis]
+                acc + self.idx_maps[axis].map(*axis_index) * self.strides[axis]
             });
 
         &self.vec[index]
     }
 }
 
-pub struct Iter<'a, T, const D: usize> {
-    array: &'a Array<T, D>,
+pub struct Iter<'a, T: Clone, const D: usize> {
+    array: &'a Array<'a, T, D>,
     indices: [usize; D],
 }
 
-impl<'a, T, const D: usize> Iter<'a, T, D> {
-    fn init(array: &'a Array<T, D>) -> Self {
+impl<'a, T: Clone, const D: usize> Iter<'a, T, D> {
+    fn init(array: &'a Array<'a, T, D>) -> Self {
         Iter {
             array,
             indices: [0; D],
@@ -177,7 +204,7 @@ impl<'a, T, const D: usize> Iter<'a, T, D> {
     }
 }
 
-impl<'a, T, const D: usize> Iterator for Iter<'a, T, D> {
+impl<'a, T: Clone, const D: usize> Iterator for Iter<'a, T, D> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -302,5 +329,14 @@ mod tests {
         let array = array.flip(0);
 
         assert_eq!(array.iter().copied().collect::<Vec<usize>>(), vec![4, 5, 6, 1, 2, 3]);
+    }
+
+    #[test]
+    fn d1() {
+        let array = Array::init(vec![1, 2, 3, 4, 5, 6], [2, 3]);
+
+        let array = array.reshape([6]);
+
+        assert_eq!(array[[0]], 1)
     }
 }
