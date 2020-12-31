@@ -1,7 +1,7 @@
 use crate::Array;
 
 impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
-    pub fn iter(&self) -> Iter<'_, T, D> {
+    pub fn flat(&self) -> Iter<'_, T, D> {
         Iter::init(self)
     }
 
@@ -96,7 +96,7 @@ mod tests {
         let array = Array::init(vec![1, 2, 3, 4, 5, 6], [2, 3]);
 
         assert_eq!(
-            array.iter().copied().collect::<Vec<usize>>(),
+            array.flat().copied().collect::<Vec<usize>>(),
             vec![1, 2, 3, 4, 5, 6]
         )
     }

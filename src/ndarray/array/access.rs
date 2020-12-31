@@ -132,7 +132,7 @@ mod tests {
         let flip_of_slice = slice.flip(1);
 
         assert_eq!(
-            flip_of_slice.iter().copied().collect::<Vec<usize>>(),
+            flip_of_slice.flat().copied().collect::<Vec<usize>>(),
             vec![11, 10, 7, 6]
         );
     }

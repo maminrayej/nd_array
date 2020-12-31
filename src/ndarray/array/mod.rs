@@ -2,6 +2,7 @@ mod access;
 mod iter;
 mod transformation;
 mod util;
+mod calc;
 
 use std::borrow::Cow;
 

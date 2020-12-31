@@ -70,9 +70,21 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
     }
 
     pub fn reshape<const S: usize>(&self, shape: [usize; S]) -> Array<'a, T, S> {
-        let vec = self.iter().cloned().collect();
+        // TODO: Check wether cloning is necessary
+
+        let vec = self.flat().cloned().collect();
 
         Array::init(vec, shape)
+    }
+
+    pub fn flatten(&self) -> Array<'a, T, 1> {
+        let vec = self.flat().cloned().collect();
+
+        Array::init(vec, [self.vec.len()])
+    }
+
+    pub fn ravel(&self) -> Array<'a, T, 1> {
+        self.reshape([self.vec.len()])
     }
 }
 
@@ -161,7 +173,7 @@ mod tests {
         let array = array.flip(0);
 
         assert_eq!(
-            array.iter().copied().collect::<Vec<usize>>(),
+            array.flat().copied().collect::<Vec<usize>>(),
             vec![4, 5, 6, 1, 2, 3]
         );
     }
