@@ -1,3 +1,11 @@
+use std::{
+    borrow::Cow,
+    ops::{Add, Mul, Sub},
+    process::Output,
+};
+
+use num_traits::{One, Zero};
+
 use crate::Array;
 
 impl<'a, T: Clone + Ord, const D: usize> Array<'a, T, D> {
@@ -55,5 +63,63 @@ impl<'a, T: Clone + Ord, const D: usize> Array<'a, T, D> {
         self.axis_view(axis)
             .map(|view| view.arg_min().get(0).copied())
             .collect()
+    }
+
+    pub fn clip(&self, min: &T, max: &T) -> Array<'a, T, D> {
+        let vec: Vec<T> = self
+            .vec
+            .iter()
+            .map(|val| val.clamp(min, max).clone())
+            .collect();
+
+        let shape = self.shape.clone();
+        let strides = self.strides.clone();
+        let idx_maps = self.idx_maps.clone();
+
+        Array {
+            vec: Cow::from(vec),
+            shape,
+            strides,
+            idx_maps,
+        }
+    }
+}
+
+impl<'a, T, const D: usize> Array<'a, T, D>
+where
+    T: Clone + Ord + Sub<Output = T>,
+{
+    pub fn ptp(&self) -> Option<T> {
+        self.max().and_then(|max| self.min().map(|min| max - min))
+    }
+
+    pub fn ptp_across(&self, axis: usize) -> Vec<Option<T>> {
+        self.axis_view(axis).map(|view| view.ptp()).collect()
+    }
+}
+
+impl<'a, T, const D: usize> Array<'a, T, D>
+where
+    T: Clone + Add<Output = T> + Zero,
+{
+    pub fn sum(&self) -> T {
+        self.flat().fold(T::zero(), |acc, val| acc + val.clone())
+    }
+
+    pub fn sum_across(&self, axis: usize) -> Vec<T> {
+        self.axis_view(axis).map(|view| view.sum()).collect()
+    }
+}
+
+impl<'a, T, const D: usize> Array<'a, T, D>
+where
+    T: Clone + Mul<Output = T> + One,
+{
+    pub fn prod(&self) -> T {
+        self.flat().fold(T::one(), |acc, val| acc * val.clone())
+    }
+
+    pub fn prod_across(&self, axis: usize) -> Vec<T> {
+        self.axis_view(axis).map(|view| view.prod()).collect()
     }
 }
