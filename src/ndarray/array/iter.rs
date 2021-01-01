@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use crate::Array;
 
 impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
@@ -8,6 +10,10 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
     pub fn axes(&self) -> Axes<'_, D> {
         Axes::init(self.shape(), self.strides())
     }
+
+    pub fn axis_view(&self, axis: usize) -> AxisView<'_, T, D> {
+        AxisView::init(self, axis)
+    } 
 }
 
 pub struct Iter<'a, T: Clone, const D: usize> {
@@ -33,9 +39,7 @@ impl<'a, T: Clone, const D: usize> Iter<'a, T, D> {
         if axis != 0 && self.indices[axis] >= self.array.shape[axis] {
             self.indices[axis] = 0;
 
-            if axis > 0 {
-                self.increment_idx_at_axis(axis - 1);
-            }
+            self.increment_idx_at_axis(axis - 1);
         }
     }
 }
@@ -81,6 +85,50 @@ impl<'a, const D: usize> Iterator for Axes<'a, D> {
         self.axis += 1;
 
         shape_stride
+    }
+}
+
+pub struct AxisView<'a, T: Clone, const D: usize> {
+    array: &'a Array<'a, T, D>,
+    slice: [Range<usize>; D],
+    axis: usize,
+    idx: usize,
+}
+
+impl<'a, T: Clone, const D: usize> AxisView<'a, T, D> {
+    pub fn init(array: &'a Array<'a, T, D>, axis: usize) -> AxisView<'a, T, D> {
+        if axis >= D {
+            panic!("Axis out of bound: {} > {}", axis, D);
+        }
+
+        let mut slice = [0..0; D];
+        for (axis, (shape, _)) in array.axes().enumerate() {
+            slice[axis] = 0..shape;
+        }
+
+        AxisView {
+            array,
+            slice,
+            axis,
+            idx: 0,
+        }
+    }
+}
+
+impl<'a, T: Clone, const D: usize> Iterator for AxisView<'a, T, D> {
+    type Item = Array<'a, T, D>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx < self.array.shape[self.axis] {
+            self.slice[self.axis] = self.idx..self.idx + 1;
+            let view = self.array.slice(&self.slice);
+
+            self.idx += 1;
+
+            Some(view)
+        } else {
+            None
+        }
     }
 }
 
