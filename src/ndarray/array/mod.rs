@@ -3,7 +3,7 @@ mod calc;
 mod iter;
 mod transformation;
 
-use std::borrow::Cow;
+use std::{borrow::Cow, ops::Range};
 
 use num_traits::{One, Zero};
 
@@ -73,6 +73,13 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
 
     pub fn full_like<'b, U: Clone>(val: T, array: &Array<'b, U, D>) -> Array<'a, T, D> {
         Array::full(val, array.shape().clone())
+    }
+
+    pub fn arange<I: Iterator<Item=T>>(range: I) -> Array<'a, T, 1> {
+        let vec: Vec<T> = range.collect();
+        let len = vec.len();
+
+        Array::init(vec, [len])
     }
 }
 
