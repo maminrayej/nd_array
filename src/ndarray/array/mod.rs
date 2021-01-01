@@ -1,9 +1,10 @@
 mod access;
 mod calc;
 mod iter;
+mod ops;
 mod transformation;
 
-use std::{borrow::Cow, ops::Range};
+use std::borrow::Cow;
 
 use num_traits::{One, Zero};
 
@@ -75,7 +76,7 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
         Array::full(val, array.shape().clone())
     }
 
-    pub fn arange<I: Iterator<Item=T>>(range: I) -> Array<'a, T, 1> {
+    pub fn arange<I: Iterator<Item = T>>(range: I) -> Array<'a, T, 1> {
         let vec: Vec<T> = range.collect();
         let len = vec.len();
 
