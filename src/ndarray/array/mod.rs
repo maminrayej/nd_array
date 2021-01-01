@@ -34,7 +34,7 @@ pub struct Array<'a, T: Clone, const D: usize> {
 
 impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
     pub fn init(vec: Vec<T>, shape: [usize; D]) -> Self {
-        let elem_count = shape.iter().fold(1, |acc, v| acc * v);
+        let elem_count: usize = shape.iter().product();
 
         if elem_count != vec.len() {
             panic!(

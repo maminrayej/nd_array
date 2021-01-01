@@ -128,7 +128,7 @@ where
     T: Clone + Add<Output = T> + Div<usize, Output = T> + Zero,
 {
     pub fn mean(&self) -> T {
-        self.sum() / self.shape().iter().sum()
+        self.sum() / self.shape().iter().product()
     }
 
     pub fn mean_across(&self, axis: usize) -> Vec<T> {
@@ -145,7 +145,7 @@ where
 
         self.flat().fold(T::zero(), |acc, val| {
             acc + (val.clone() - mean.clone()) * (val.clone() - mean.clone())
-        }) / self.shape().iter().sum()
+        }) / self.shape().iter().product()
     }
 
     pub fn var_across(&self, axis: usize) -> Vec<T> {
