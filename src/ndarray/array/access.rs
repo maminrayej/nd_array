@@ -1,25 +1,17 @@
 use std::{
     borrow::Cow,
-    ops::{Index, Range, RangeBounds},
+    ops::{Index, Range},
 };
 
 use crate::Array;
 
-use super::util::bounded_range_of;
-
 impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
-    pub fn slice<R: RangeBounds<usize>>(&'a self, ranges: [R; D]) -> Array<'a, T, D> {
+    pub fn slice(&'a self, ranges: &[Range<usize>; D]) -> Array<'a, T, D> {
         let mut shape = self.shape.clone();
         let strides = self.strides.clone();
         let mut idx_maps = self.idx_maps.clone();
 
-        let bounded_ranges = ranges
-            .iter()
-            .enumerate()
-            .map(|(axis, range)| bounded_range_of(self.shape[axis], range))
-            .collect::<Vec<Range<usize>>>();
-
-        bounded_ranges.iter().enumerate().for_each(|(axis, range)| {
+        ranges.iter().enumerate().for_each(|(axis, range)| {
             if range.end > self.shape[axis] {
                 panic!(
                     "Range: [{},{}) is out of bounds for axis: {}",
@@ -29,8 +21,8 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
         });
 
         for axis in 0..D {
-            idx_maps[axis].append_b((bounded_ranges[axis].start) as isize);
-            shape[axis] = bounded_ranges[axis].end - bounded_ranges[axis].start;
+            idx_maps[axis].append_b((ranges[axis].start) as isize);
+            shape[axis] = ranges[axis].end - ranges[axis].start;
         }
 
         Array {
@@ -125,7 +117,7 @@ mod tests {
         // slice the center of the array
         // 10 11
         // 6  7
-        let slice = flipped.slice([1..3, 1..3]);
+        let slice = flipped.slice(&[1..3, 1..3]);
 
         // 11 10
         // 7  6
