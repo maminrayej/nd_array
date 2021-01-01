@@ -5,6 +5,8 @@ mod transformation;
 
 use std::borrow::Cow;
 
+use num_traits::{One, Zero};
+
 #[derive(Debug, Clone, Copy)]
 struct IdxMap {
     m: isize,
@@ -63,5 +65,33 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
 
     pub fn strides(&self) -> &[usize; D] {
         &self.strides
+    }
+
+    pub fn full(val: T, shape: [usize; D]) -> Array<'a, T, D> {
+        Array::init(vec![val; shape.iter().product()], shape)
+    }
+
+    pub fn full_like<'b, U: Clone>(val: T, array: &Array<'b, U, D>) -> Array<'a, T, D> {
+        Array::full(val, array.shape().clone())
+    }
+}
+
+impl<'a, T: Clone + Zero, const D: usize> Array<'a, T, D> {
+    pub fn zeros(shape: [usize; D]) -> Self {
+        Array::init(vec![T::zero(); shape.iter().product()], shape)
+    }
+
+    pub fn zeros_like<'b, U: Clone>(array: &Array<'b, U, D>) -> Array<'a, T, D> {
+        Array::zeros(array.shape().clone())
+    }
+}
+
+impl<'a, T: Clone + One, const D: usize> Array<'a, T, D> {
+    pub fn ones(shape: [usize; D]) -> Self {
+        Array::init(vec![T::one(); shape.iter().product()], shape)
+    }
+
+    pub fn ones_like<'b, U: Clone>(array: &Array<'b, U, D>) -> Array<'a, T, D> {
+        Array::ones(array.shape().clone())
     }
 }
