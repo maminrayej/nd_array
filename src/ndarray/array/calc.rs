@@ -1,6 +1,6 @@
 use std::{
     borrow::Cow,
-    ops::{Add, Mul, Sub},
+    ops::{Add, Div, Mul, Sub},
 };
 
 use num_traits::{One, Zero};
@@ -120,5 +120,35 @@ where
 
     pub fn prod_across(&self, axis: usize) -> Vec<T> {
         self.axis_view(axis).map(|view| view.prod()).collect()
+    }
+}
+
+impl<'a, T, const D: usize> Array<'a, T, D>
+where
+    T: Clone + Add<Output = T> + Div<usize, Output = T> + Zero,
+{
+    pub fn mean(&self) -> T {
+        self.sum() / self.shape().iter().sum()
+    }
+
+    pub fn mean_across(&self, axis: usize) -> Vec<T> {
+        self.axis_view(axis).map(|view| view.mean()).collect()
+    }
+}
+
+impl<'a, T, const D: usize> Array<'a, T, D>
+where
+    T: Clone + Sub<Output = T> + Div<usize, Output = T> + Mul<Output = T> + Zero,
+{
+    pub fn var(&self) -> T {
+        let mean = self.mean();
+
+        self.flat().fold(T::zero(), |acc, val| {
+            acc + (val.clone() - mean.clone()) * (val.clone() - mean.clone())
+        }) / self.shape().iter().sum()
+    }
+
+    pub fn var_across(&self, axis: usize) -> Vec<T> {
+        self.axis_view(axis).map(|view| view.var()).collect()
     }
 }
