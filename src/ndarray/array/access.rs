@@ -6,12 +6,12 @@ use std::{
 use crate::Array;
 
 impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
-    pub fn slice(&'a self, ranges: &[Range<usize>; D]) -> Array<'a, T, D> {
+    pub fn slice(&'a self, slice: &[Range<usize>; D]) -> Array<'a, T, D> {
         let mut shape = self.shape.clone();
         let strides = self.strides.clone();
         let mut idx_maps = self.idx_maps.clone();
 
-        ranges.iter().enumerate().for_each(|(axis, range)| {
+        slice.iter().enumerate().for_each(|(axis, range)| {
             if range.end > self.shape[axis] {
                 panic!(
                     "Range: [{},{}) is out of bounds for axis: {}",
@@ -21,8 +21,8 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
         });
 
         for axis in 0..D {
-            idx_maps[axis].append_b((ranges[axis].start) as isize);
-            shape[axis] = ranges[axis].end - ranges[axis].start;
+            idx_maps[axis].append_b((slice[axis].start) as isize);
+            shape[axis] = slice[axis].end - slice[axis].start;
         }
 
         Array {
