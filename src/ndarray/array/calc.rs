@@ -1,7 +1,6 @@
 use std::{
     borrow::Cow,
     ops::{Add, Mul, Sub},
-    process::Output,
 };
 
 use num_traits::{One, Zero};

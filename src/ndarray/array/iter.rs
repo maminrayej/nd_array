@@ -13,7 +13,7 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
 
     pub fn axis_view(&self, axis: usize) -> AxisView<'_, T, D> {
         AxisView::init(self, axis)
-    } 
+    }
 }
 
 pub struct Iter<'a, T: Clone, const D: usize> {
