@@ -88,6 +88,21 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
     }
 }
 
+impl<'a, T: Clone + Default, const D: usize> Array<'a, T, D> {
+    pub fn resize<const S: usize>(mut self, shape: [usize; S]) -> Array<'a, T, S> {
+        let new_size = shape.iter().product();
+        let old_size = self.shape().iter().product();
+
+        if new_size > old_size {
+            self.vec.to_mut().resize_with(new_size, || T::default());
+        } else {
+            self.vec.to_mut().truncate(new_size);
+        }
+
+        self.reshape(shape)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
