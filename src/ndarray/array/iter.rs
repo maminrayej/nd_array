@@ -1,5 +1,7 @@
 use std::ops::Range;
 
+use arrayvec::ArrayVec;
+
 use crate::Array;
 
 impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
@@ -101,14 +103,14 @@ impl<'a, T: Clone, const D: usize> AxisView<'a, T, D> {
             panic!("Axis out of bound: {} > {}", axis, D);
         }
 
-        let mut slice = [0..0; D];
-        for (axis, (shape, _)) in array.axes().enumerate() {
-            slice[axis] = 0..shape;
+        let mut slice = ArrayVec::new_const();
+        for (shape, _) in array.axes() {
+            slice.push(0..shape);
         }
 
         AxisView {
             array,
-            slice,
+            slice: slice.into_inner().unwrap(),
             axis,
             idx: 0,
         }
