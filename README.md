@@ -1,5 +1,8 @@
-# ndarray-rs
+# nd_array
 Crate for linear algebra that tries to have a similar api to numpy.
+
+[![Crate](https://img.shields.io/crates/v/nd_array.svg)](https://crates.io/crates/nd_array)
+[![API](https://docs.rs/nd_array/badge.svg)](https://docs.rs/nd_array)
 
 # Creation
 ### Range of values

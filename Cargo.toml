@@ -1,8 +1,14 @@
 [package]
-name = "ndarray-rs"
+name = "nd_array"
 version = "0.1.0"
 authors = ["m.amin.rayej <m.amin.rayej@gmail.com>"]
 edition = "2018"
+readme = "README.md"
+license = "MIT"
+description = "Crate for linear algebra that tries to have a similar api to numpy"
+repository = "https://github.com/maminrayej/nd_array"
+homepage = "https://github.com/maminrayej/nd_array"
+documentation = "https://docs.rs/nd_array"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
