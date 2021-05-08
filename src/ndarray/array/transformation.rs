@@ -192,4 +192,32 @@ mod tests {
             vec![4, 5, 6, 1, 2, 3]
         );
     }
+
+    #[test]
+    fn swap_axis() {
+        // 2-D array:
+        // 1 2 3
+        let array = Array::init(vec![1, 2, 3], [1, 3]);
+
+        let swapped_array = array.swap_axes(0, 1);
+
+        assert_eq!(swapped_array[[0, 0]], 1);
+        assert_eq!(swapped_array[[1, 0]], 2);
+        assert_eq!(swapped_array[[2, 0]], 3);
+    }
+
+    #[test]
+    fn flatten() {
+        // 2-D array:
+        // 1 2 3
+        // 4 5 6
+        let array = Array::init(vec![1, 2, 3, 4, 5, 6], [2, 3]);
+
+        let flatten_array = array.flatten();
+
+        assert_eq!(
+            flatten_array.flat().copied().collect::<Vec<usize>>(),
+            vec![1, 2, 3, 4, 5, 6]
+        )
+    }
 }

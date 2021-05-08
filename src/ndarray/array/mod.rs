@@ -75,7 +75,9 @@ impl<'a, T: Clone, const D: usize> Array<'a, T, D> {
     pub fn full_like<'b, U: Clone>(val: T, array: &Array<'b, U, D>) -> Array<'a, T, D> {
         Array::full(val, array.shape().clone())
     }
+}
 
+impl<'a, T: Clone> Array<'a, T, 1> {
     pub fn arange<I: Iterator<Item = T>>(range: I) -> Array<'a, T, 1> {
         let vec: Vec<T> = range.collect();
         let len = vec.len();
@@ -101,5 +103,86 @@ impl<'a, T: Clone + One, const D: usize> Array<'a, T, D> {
 
     pub fn ones_like<'b, U: Clone>(array: &Array<'b, U, D>) -> Array<'a, T, D> {
         Array::ones(array.shape().clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn arange() {
+        let array = Array::arange(0..10);
+
+        assert_eq!(
+            array.flat().copied().collect::<Vec<usize>>(),
+            vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        )
+    }
+
+    #[test]
+    fn zeros() {
+        let array = Array::zeros([2, 4]);
+
+        assert_eq!(
+            array.flat().copied().collect::<Vec<usize>>(),
+            vec![0, 0, 0, 0, 0, 0, 0, 0]
+        )
+    }
+
+    #[test]
+    fn zeros_like() {
+        let array = Array::arange(0..8).reshape([2, 4]);
+
+        let zeros_like = Array::zeros_like(&array);
+
+        assert_eq!(
+            zeros_like.flat().copied().collect::<Vec<usize>>(),
+            vec![0, 0, 0, 0, 0, 0, 0, 0]
+        )
+    }
+
+    #[test]
+    fn ones() {
+        let array = Array::ones([2, 4]);
+
+        assert_eq!(
+            array.flat().copied().collect::<Vec<usize>>(),
+            vec![1, 1, 1, 1, 1, 1, 1, 1]
+        )
+    }
+
+    #[test]
+    fn ones_like() {
+        let array = Array::arange(0..8).reshape([2, 4]);
+
+        let ones_like = Array::ones_like(&array);
+
+        assert_eq!(
+            ones_like.flat().copied().collect::<Vec<usize>>(),
+            vec![1, 1, 1, 1, 1, 1, 1, 1]
+        )
+    }
+
+    #[test]
+    fn full() {
+        let array = Array::full(10, [2, 4]);
+
+        assert_eq!(
+            array.flat().copied().collect::<Vec<usize>>(),
+            vec![10, 10, 10, 10, 10, 10, 10, 10]
+        )
+    }
+
+    #[test]
+    fn full_like() {
+        let array = Array::arange(0..8).reshape([2, 4]);
+
+        let full_like = Array::full_like(10, &array);
+
+        assert_eq!(
+            full_like.flat().copied().collect::<Vec<usize>>(),
+            vec![10, 10, 10, 10, 10, 10, 10, 10]
+        )
     }
 }

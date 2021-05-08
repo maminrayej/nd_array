@@ -144,3 +144,71 @@ impl<'a, U: Clone, O: 'a + Clone, T: Clone + Div<U, Output = O>, const D: usize>
         (&self).div(rhs)
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn neg() {
+        let array = Array::init(vec![1, 2, 3, 4, 5, 6], [2, 3]);
+
+        let neg_array = -array;
+
+        assert_eq!(
+            neg_array.flat().copied().collect::<Vec<i32>>(),
+            vec![-1, -2, -3, -4, -5, -6]
+        );
+    }
+
+    #[test]
+    fn add() {
+        let array = Array::init(vec![1, 2, 3, 4, 5, 6], [2, 3]);
+        let array2 = Array::init(vec![6, 5, 4, 3, 2, 1], [2, 3]);
+
+        let sum_array = array + array2;
+
+        assert_eq!(
+            sum_array.flat().copied().collect::<Vec<i32>>(),
+            vec![7, 7, 7, 7, 7, 7]
+        );
+    }
+
+    #[test]
+    fn sub() {
+        let array = Array::init(vec![1, 2, 3, 4, 5, 6], [2, 3]);
+        let array2 = Array::init(vec![6, 5, 4, 3, 2, 1], [2, 3]);
+
+        let sub_array = array - array2;
+
+        assert_eq!(
+            sub_array.flat().copied().collect::<Vec<i32>>(),
+            vec![-5, -3, -1, 1, 3, 5]
+        );
+    }
+
+    #[test]
+    fn mul() {
+        let array = Array::init(vec![1, 2, 3, 4, 5, 6], [2, 3]);
+
+        let mul_array = array * 2;
+
+        assert_eq!(
+            mul_array.flat().copied().collect::<Vec<i32>>(),
+            vec![2, 4, 6, 8, 10, 12]
+        );
+    }
+
+    #[test]
+    fn div() {
+        let array = Array::init(vec![2, 4, 6, 8, 10, 12], [2, 3]);
+
+        let div_array = array / 2;
+
+        assert_eq!(
+            div_array.flat().copied().collect::<Vec<i32>>(),
+            vec![1, 2, 3, 4, 5, 6]
+        );
+    }
+}
